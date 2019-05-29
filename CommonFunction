@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 ### Image Processing图像处理 ###
 def findBestMatch(template, src, ptInSrc=(0, 0), width=640, height=360):
