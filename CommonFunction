@@ -4,6 +4,7 @@
 import cv2
 import numpy as np
 
+### Image Processing图像处理 ###
 def findBestMatch(template, src, ptInSrc=(0, 0), width=640, height=360):
     """
     从输入图像src上截取一块ROI，然后去寻找&匹配模板，返回最佳匹配结果 - 匹配度与位置
@@ -106,5 +107,155 @@ def checkTemplate(templateImg, srcImg):
     return True, matchResult
     
 
+### Image histogram图像直方图相关 ###
+def showGrayHist(imgPath):
+    """
+    展示图片的灰度直方图
+    :param imgPath: 输入图片的路径
+    :return: void
+    """
+    srcImg = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)     # 读入灰度图片
+    cv2.imshow("src", srcImg)  # 显示输入图片的灰度图
+
+    # 得到矩阵的高和宽
+    rows, cols = srcImg.shape
+
+    # 将二维的图像矩阵，变为一维的矩阵，便于计算灰度直方图
+    pixelSequence = srcImg.reshape([rows * cols, ])
+    numberBins = 256  # 组数
+
+    # 计算灰度直方图
+    histogram, bins, patch = plt.hist(pixelSequence, bins=numberBins,
+                                      facecolor='black', histtype='bar')
+
+    # 设置坐标轴的标签
+    plt.xlabel("gray Level")
+    plt.ylabel("number of pixels")
+
+    # 设置坐标轴范围
+    y_maxValue = np.max(histogram)
+    plt.axis([0, 255, 0, y_maxValue])
+
+    plt.show()
+    
+
+def calcAndShowGrayHist(imgPath):
+    """
+    先计算图片的灰度直方图然后展示
+    :param imgPath: 输入图片的路径
+    :return: void
+    """
+    srcImg = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)  # 读入灰度图片
+    cv2.imshow("src", srcImg)  # 显示输入图片的灰度图
+    # 计算灰度直方图
+    grayHist = calcGrayHist(srcImg)
+    # 画灰度直方图
+    x_range = range(256)
+    plt.plot(x_range, grayHist, 'r', linewidth=2, c='black')
+
+    # 设置坐标轴范围
+    y_maxValue = np.max(grayHist)
+    plt.axis([0, 255, 0, y_maxValue])
+
+    # 设置坐标轴的标签
+    plt.xlabel("gray Level")
+    plt.ylabel("number of pixels")
+    plt.show()
+
+
+def calcGrayHist(image):
+    """
+    计算图片的灰度直方图
+    :param image: 输入图片的np.ndarrary类型
+    :return: 图片的灰度直方图
+    """
+    rows, cols = image.shape
+    # 存储灰度直方图
+    grayHist = np.zeros([256], np.uint64)
+    for r in range(rows):
+        for c in range(cols):
+            grayHist[image[r,c]] += 1
+    return grayHist
+
+def showColorHist(imgPath):
+    """
+    展示图片的彩色直方图
+    :param imgPath: 输入图片的路径。务必确保输入图片为三通道的彩色图片。
+    :return: void
+    """
+    # 将图像从磁盘加载并显示它
+    srcImg = cv2.imread(imgPath)  # 读取图片，彩色格式即flag=cv2.IMREAD_COLOR
+    cv2.imshow("Original", srcImg)
+    if len(srcImg.shape) != 3:
+        print("Please input 3-channel picture!")
+
+    # 拆分图片
+    chans = cv2.split(srcImg)  # B, G, R
+    colors = ("b", "g", "r")
+
+    # 用matplotlib PyPlot画图，set up our PyPlot figure
+    plt.figure()
+    plt.title("Flattened Color Histogram")  # 设定图的标题
+    plt.xlabel("Bins")  # 设定x轴标签
+    plt.ylabel("# of pixels")  # 设定y轴标签
+
+    for (chan, color) in zip(chans, colors):
+        hist = cv2.calcHist([chan], [0], None, [256], [0, 256])
+        plt.plot(hist, color=color)  # 画曲线，并设定曲线的颜色
+        plt.xlim([0, 256])  # 设定x轴的上下限
+
+    plt.show()  # 显示画出的图片
+
+
+def show2DColorHist(imgPath):
+    """
+    展示图片的彩色2D直方图, Green and Blue, Green and Red, Blue and Red并排显示
+    :param imgPath: 输入图片的路径。务必确保输入图片为三通道的彩色图片。
+    :return: void
+    """
+    # 将图像从磁盘加载并显示它
+    srcImg = cv2.imread(imgPath)  # 读取图片，彩色格式即flag=cv2.IMREAD_COLOR
+    cv2.imshow("Original", srcImg)
+    if len(srcImg.shape) != 3:
+        print("Please input 3-channel picture!")
+
+    # 拆分图片
+    chans = cv2.split(srcImg)  # B, G, R
+    colors = ("b", "g", "r")
+
+    # 画2D直方图
+    fig = plt.figure()
+    plt.title("2D Color Histogram")  # 设定图的标题
+    plt.axis('off')     # 隐藏坐标轴x, y
+
+    # 2D直方图由于计算量的关系，只展示32*32Bin
+    # Green and Blue
+    ax = fig.add_subplot(131)
+    hist = cv2.calcHist([chans[1], chans[0]], [0, 1], None, [32, 32], [0, 256, 0, 256])
+    p = ax.imshow(hist, interpolation="nearest")
+    ax.set_title("Green and Blue")  # Green and Blue
+    plt.colorbar(p)
+
+    # Green and Red
+    ax = fig.add_subplot(132)
+    hist = cv2.calcHist([chans[1], chans[2]], [0, 1], None, [32, 32], [0, 256, 0, 256])
+    p = ax.imshow(hist, interpolation="nearest")
+    ax.set_title("Green and Red")  # Green and Red
+    plt.colorbar(p)
+
+    # Blue and Red
+    ax = fig.add_subplot(133)
+    hist = cv2.calcHist([chans[0], chans[2]], [0, 1], None, [32, 32], [0, 256, 0, 256])
+    p = ax.imshow(hist, interpolation="nearest")
+    ax.set_title("Blue and Red")  # Blue and Red
+    plt.colorbar(p)
+
+    print("2D histogram shape: {}, with {} values".format(hist.shape, hist.flatten().shape[0]))
+    plt.show()  # 显示画出的图片
+
+
 if __name__ == '__main__':
     checkTemplate('F:/images/gTemplate.jpg','F:/images/8.bmp')
+    showGrayHist("F:/images/lena.jpg")      # 显示灰色直方图
+    showColorHist("F:/images/lena.jpg")     # 显示彩色直方图
+    show2DColorHist("F:/images/lena.jpg")   # 显示彩色2D直方图
