@@ -261,8 +261,42 @@ def show2DColorHist(imgPath):
     plt.show()  # 显示画出的图片
 
 
+# Windows OS下的控制台指令 #
+import os
+import subprocess
+def cmdPrompt(cmdName, parameter):
+    """
+    Execute command in terminal
+    :param cmdName: 指令名称，字符串类型，例如 "C:\Python\python.exe", ".\QRCode.exe"
+    :param parameter: 参数名称，字符串类型，例如 "hello.py"
+    :return: stdout
+    """
+    adb_path = os.path.join(os.getcwd(), cmdName)
+    command = adb_path + ' ' + parameter
+    p = subprocess.Popen(command, shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    return stdout
+
+
+def adbcommand(cmd):
+    """
+    Execute command in adb shell在控制台运行adb.exe shell ...
+    :param cmd: 指令名称，例如"shell cat /factory_setting/serial.txt"
+    :return: stdout
+    """
+    adb_path = os.path.join(os.getcwd(), 'adb.exe')
+    command = adb_path + ' ' + cmd
+    p = subprocess.Popen(command, shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    return stdout
+
+
 if __name__ == '__main__':
     checkTemplate('F:/images/gTemplate.jpg', 'F:/images/8.bmp')
     showGrayHist("F:/images/lena.jpg")  # 显示灰色直方图
     showColorHist("F:/images/lena.jpg")  # 显示彩色直方图
     show2DColorHist("F:/images/lena.jpg")  # 显示彩色2D直方图
+    ret = cmdPrompt('C:\Python\Python36\python3.exe', 'hello.py')
+    print(ret)
